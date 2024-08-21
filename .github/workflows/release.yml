@@ -1,0 +1,74 @@
+name: Build elilogs release
+on:
+    push:
+        tags:
+            - 'v*.*.*'
+env:
+    GO_VERSION: '1.22.4'
+jobs:
+    build:
+        name: Build binaries
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                goos: [linux, darwin, windows]
+                goarch: [amd64, arm64, 386]
+                exclude:
+                  - goos: darwin
+                    goarch: 386
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@master
+
+            - name: Setup go
+              uses: actions/setup-go@master
+              with:
+                go-version: ${{ env.GO_VERSION }}
+
+            - name: Build binary
+              run: |
+                mkdir -p bin
+                GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o bin/elilogs-${{ matrix.goos }}-${{ matrix.goarch }}
+
+            - name: Archive binaries
+              if: startsWith(matrix.goos, 'windows')
+              run: |
+                cd bin
+                zip elilogs-${{ matrix.goos }}-${{ matrix.goarch }}.zip elilogs-${{ matrix.goos }}-${{ matrix.goarch }}
+                cd ..
+
+            - name: Archive binaries
+              if: "!startsWith(matrix.goos, 'windows')"
+              run: |
+                cd bin
+                tar -czf elilogs-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz elilogs-${{ matrix.goos }}-${{ matrix.goarch }}
+                cd ..
+
+            - name: Upload binaries
+              uses: actions/upload-artifact@v3
+              with:
+                name: elilogs-${{ matrix.goos }}-${{ matrix.goarch }}
+                path: bin/elilogs-${{ matrix.goos }}-${{ matrix.goarch }}.*
+  
+    release:
+        name: Create Release
+        runs-on: ubuntu-latest
+        needs: build
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v3
+
+            - name: Download binaries
+              uses: actions/download-artifact@v3
+              with:
+                path: bin/
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              env:
+                GITHUB_TOKEN: ${{ secrets.ELILOGS_PAT }}
+              with:
+                files: bin/*/*
+

@@ -1,0 +1,14 @@
+# Ignore common dev system fiels
+.vscode/
+.DS_Store
+
+# Ignore default config
+config.yml
+
+# Test binary
+*.test
+
+# Other possible binaries
+bin/*
+*.exe
+*.exe~

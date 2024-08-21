@@ -1,0 +1,10 @@
+core:
+  es_version: 8
+  timeout: 10
+  log_level: "warn"
+
+elasticsearch:
+  address: ["https://localhost:9200"]
+  username: "elastic"
+  password: "elastic"
+  ca_cert_path: ""
