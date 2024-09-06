@@ -19,10 +19,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@master
+              uses: actions/checkout@v4
 
             - name: Setup go
-              uses: actions/setup-go@master
+              uses: actions/setup-go@v5
               with:
                 go-version: ${{ env.GO_VERSION }}
 
@@ -46,7 +46,7 @@ jobs:
                 cd ..
 
             - name: Upload binaries
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                 name: elilogs-${{ matrix.goos }}-${{ matrix.goarch }}
                 path: bin/elilogs-${{ matrix.goos }}-${{ matrix.goarch }}.*
@@ -58,10 +58,10 @@ jobs:
 
         steps:
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             - name: Download binaries
-              uses: actions/download-artifact@v3
+              uses: actions/download-artifact@v4
               with:
                 path: bin/
 
