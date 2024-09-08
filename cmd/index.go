@@ -23,9 +23,9 @@ var indexCmd = &cobra.Command{
 	Long: `This command lists information about Elasticsearch indexes.
 	
 EXIT STATUS
-0 if all indexes have green health status
-1 if any returned indexes do not have green health status
-2 if there was an error with the request/response`,
+0 if all indexes have green health status,
+1 if there was an error with the request/response,
+2 if any returned indexes do not have green health status.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		exitCode := 0
 		// Get index args and split into slices on ","
@@ -38,7 +38,6 @@ EXIT STATUS
 		conn, err := utils.Connect()
 		if err != nil {
 			utils.Error("error connecting", err)
-			os.Exit(2)
 		}
 		utils.Info("check successful")
 
@@ -54,11 +53,9 @@ EXIT STATUS
 		if indexResp.StatusCode != http.StatusOK {
 			r, _ := io.ReadAll(indexResp.Body)
 			utils.Error("error getting indexes:", errors.New(string(r)))
-			os.Exit(2)
 		}
 		if err != nil {
 			utils.Error("error getting indexes:", err)
-			os.Exit(2)
 		}
 		defer indexResp.Body.Close()
 
@@ -67,7 +64,6 @@ EXIT STATUS
 		indexData, err := utils.HandleResponse(resp)
 		if err != nil && len(resp) != 0 {
 			utils.Error("error unmarshalling response:", err)
-			os.Exit(2)
 		}
 
 		// Print report if not quiet
@@ -75,11 +71,11 @@ EXIT STATUS
 			fmt.Printf("%-15s %-10s %-10s\n", "index", "status", "health")
 			if len(resp) == 0 {
 				fmt.Println("No matching indexes found")
-				exitCode = 1
+				exitCode = 2
 			}
 			for i := 0; i < len(indexData); i++ {
 				if indexData[i]["health"] != "green" {
-					exitCode = 1
+					exitCode = 2
 				}
 				fmt.Printf("%-15.15s %-10.10s %-10.10s\n", indexData[i]["index"], indexData[i]["status"], indexData[i]["health"])
 			}

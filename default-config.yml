@@ -8,3 +8,6 @@ elasticsearch:
   username: "elastic"
   password: "elastic"
   ca_cert_path: ""
+  certificate_fingerprint:
+  cloud_id: ""
+  cloud_api_key: ""
