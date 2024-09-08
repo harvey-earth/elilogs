@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
-
 )
 
 func cleanup(errString string, err error) string {
@@ -17,9 +16,9 @@ func cleanup(errString string, err error) string {
 	return fmt.Sprintf(strings.Replace(errString, "\n ", "", 1), err.Error())
 }
 
-// Debug returns a debug message to the logger 
+// Debug returns a debug message to the logger
 func Debug(debugString string) {
-		Elilogger.Debug(debugString)
+	Elilogger.Debug(debugString)
 }
 
 // Error returns an error message to the logger and terminates
@@ -39,10 +38,10 @@ func Fatal(errString string, err error) {
 	}
 }
 
-// Info returns an info msg to the logger 
+// Info returns an info msg to the logger
 // is info or debug
 func Info(infoString string) {
-		Elilogger.Info(infoString)
+	Elilogger.Info(infoString)
 }
 
 // Warn returns a warning msg to the logger

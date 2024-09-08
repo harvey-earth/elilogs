@@ -10,6 +10,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/harvey-earth/elilogs/utils"
 )
@@ -38,6 +39,12 @@ EXIT STATUS
 			allF = true
 		}
 
+		// Set variables to hold data
+		var healthData []map[string]string
+		var nodeData []map[string]string
+		var pendingData []map[string]string
+		var snapData []map[string]string
+
 		// Connect to cluster
 		conn, err := utils.Connect()
 		if err != nil {
@@ -46,7 +53,7 @@ EXIT STATUS
 		}
 		utils.Info("check successful")
 
-		// Print cluster health information if all or health
+		// Get cluster health information if all or health
 		if allF || healthF {
 			// Make call for cat health, log, and error check
 			healthResp, err := esapi.CatHealthRequest{Format: "json"}.Do(context.Background(), conn)
@@ -65,28 +72,14 @@ EXIT STATUS
 			resp, _ := io.ReadAll(healthResp.Body)
 			utils.LogRequest(resp)
 
-			healthData, err := utils.HandleResponse(resp)
+			healthData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
 				os.Exit(2)
 			}
-
-			// Print health report
-			fmt.Println("HEALTH")
-			fmt.Printf("%-20s %-10s\n", "cluster name", "status")
-			for i := 0; i < len(healthData); i++ {
-				if healthData[i]["status"] != "green" {
-					exitCode = 1
-				}
-				fmt.Printf("%-20.20s %-10s\n", healthData[i]["cluster"], healthData[i]["status"])
-			}
-
-			if allF || nodesF || pendingF || snapshotF {
-				fmt.Println("")
-			}
 		}
 
-		// Print information about nodes if all or nodes
+		// Get information about nodes if all or nodes
 		if allF || nodesF {
 			nodeResp, err := esapi.CatNodesRequest{Format: "json"}.Do(context.Background(), conn)
 			if nodeResp.StatusCode != http.StatusOK {
@@ -102,30 +95,14 @@ EXIT STATUS
 			resp, _ := io.ReadAll(nodeResp.Body)
 			utils.LogRequest(resp)
 
-			nodeData, err := utils.HandleResponse(resp)
+			nodeData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response", err)
 				os.Exit(2)
 			}
-
-			// Print node report
-			fmt.Println("NODES")
-			fmt.Printf("%-20.20s %-10.10s\n", "node name", "ip")
-			for i := 0; i < len(nodeData); i++ {
-				fmt.Printf("%-20.20s %-10.10s", nodeData[i]["name"], nodeData[i]["ip"])
-				if nodeData[i]["master"] == "*" {
-					fmt.Println(" - MASTER")
-				} else {
-					fmt.Println("")
-				}
-			}
-
-			if allF || pendingF || snapshotF {
-				fmt.Println("")
-			}
 		}
 
-		// Print information about pending tasks if all or pending
+		// Get information about pending tasks if all or pending
 		if allF || pendingF {
 			pendingResp, err := esapi.CatPendingTasksRequest{Format: "json"}.Do(context.Background(), conn)
 			if pendingResp.StatusCode != http.StatusOK {
@@ -142,25 +119,14 @@ EXIT STATUS
 			resp, _ := io.ReadAll(pendingResp.Body)
 			utils.LogRequest(resp)
 
-			pendingData, err := utils.HandleResponse(resp)
+			pendingData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
 				os.Exit(2)
 			}
-
-			// Print pending tasks report
-			fmt.Println("PENDING TASKS")
-			fmt.Printf("%-20.20s %-10.10s\n", "source", "priority")
-			for i := 0; i < len(pendingData); i++ {
-				fmt.Printf("%-20.20s %-10.10s\n", pendingData[i]["source"], pendingData[i]["priority"])
-			}
-
-			if allF || snapshotF {
-				fmt.Println("")
-			}
 		}
 
-		// Print information about snapshots if all or pending
+		// Get information about snapshots if all or pending
 		if allF || snapshotF {
 			snapResp, err := esapi.CatSnapshotsRequest{Format: "json"}.Do(context.Background(), conn)
 			if snapResp.StatusCode != http.StatusOK {
@@ -177,20 +143,76 @@ EXIT STATUS
 			resp, _ := io.ReadAll(snapResp.Body)
 			utils.LogRequest(resp)
 
-			snapData, err := utils.HandleResponse(resp)
+			snapData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
 				os.Exit(2)
 			}
 
-			fmt.Println("SNAPSHOTS")
-			fmt.Printf("%-20.20s %-10.10s\n", "id", "status")
-			for i := 0; i < len(snapData); i++ {
-				fmt.Printf("%-20.20s %-10.10s\n", snapData[i]["id"], snapData[i]["status"])
-			}
 		}
 		if exitCode != 0 {
 			os.Exit(exitCode)
+		}
+
+		// Print data
+		if l := viper.GetBool("quiet"); l {
+		} else {
+			if allF || healthF {
+				// Print health report
+				fmt.Println("HEALTH")
+				fmt.Printf("%-20s %-10s\n", "cluster name", "status")
+				for i := 0; i < len(healthData); i++ {
+					if healthData[i]["status"] != "green" {
+						exitCode = 1
+					}
+					fmt.Printf("%-20.20s %-10s\n", healthData[i]["cluster"], healthData[i]["status"])
+				}
+
+				if allF || nodesF || pendingF || snapshotF {
+					fmt.Println("")
+				}
+			}
+
+			if allF || nodesF {
+				// Print node report
+				fmt.Println("NODES")
+				fmt.Printf("%-20.20s %-10.10s\n", "node name", "ip")
+				for i := 0; i < len(nodeData); i++ {
+					fmt.Printf("%-20.20s %-10.10s", nodeData[i]["name"], nodeData[i]["ip"])
+					if nodeData[i]["master"] == "*" {
+						fmt.Println(" - MASTER")
+					} else {
+						fmt.Println("")
+					}
+				}
+
+				if allF || pendingF || snapshotF {
+					fmt.Println("")
+				}
+			}
+
+			if allF || pendingF {
+				// Print pending tasks report
+				fmt.Println("PENDING TASKS")
+				fmt.Printf("%-20.20s %-10.10s\n", "source", "priority")
+				for i := 0; i < len(pendingData); i++ {
+					fmt.Printf("%-20.20s %-10.10s\n", pendingData[i]["source"], pendingData[i]["priority"])
+				}
+
+				if allF || snapshotF {
+					fmt.Println("")
+				}
+			}
+
+			if allF || snapshotF {
+				// Print snapshot report
+				fmt.Println("SNAPSHOTS")
+				fmt.Printf("%-20.20s %-10.10s\n", "id", "status")
+				for i := 0; i < len(snapData); i++ {
+					fmt.Printf("%-20.20s %-10.10s\n", snapData[i]["id"], snapData[i]["status"])
+				}
+			}
+
 		}
 	},
 }

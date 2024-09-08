@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/harvey-earth/elilogs/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,14 +32,19 @@ func Execute() {
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "debug output")
+	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
-	rootCmd.MarkFlagsMutuallyExclusive("debug", "verbose")
+	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "quiet output")
+	viper.BindPFlag("quiet", rootCmd.PersistentFlags().Lookup("quiet"))
+	rootCmd.MarkFlagsMutuallyExclusive("debug", "quiet", "verbose")
 
 }
 
 // Configure reads in configuration file and environment variables
-func Configure() {
+func initConfig() {
 	viper.SetDefault("logLevel", "warn")
 
 	viper.SetEnvPrefix("ELILOGS")
@@ -66,10 +72,14 @@ func SetLogLevel() {
 	if lvl != "" {
 		viper.Set("logLevel", lvl)
 	}
-	if c, _ := rootCmd.Flags().GetBool("verbose"); c {
+	if c := viper.GetBool("verbose"); c {
 		viper.Set("logLevel", "info")
 	}
-	if c, _ := rootCmd.Flags().GetBool("debug"); c {
+	if c := viper.GetBool("debug"); c {
 		viper.Set("logLevel", "debug")
 	}
+	if c := viper.GetBool("quiet"); c {
+		viper.Set("logLevel", "quiet")
+	}
+	utils.InitLogger()
 }

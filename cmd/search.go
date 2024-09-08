@@ -11,6 +11,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/harvey-earth/elilogs/utils"
 )
@@ -76,18 +77,22 @@ elilogs search -i ["index"] 'query'`,
 			os.Exit(2)
 		}
 
-		if searchData.Hits.HitsCount.Total == 0 {
-			fmt.Println("No results found")
-			os.Exit(1)
+		// Print results unless quiet
+		if q := viper.GetBool("quiet"); q {
 		} else {
-			fmt.Println("index", "\t", "document")
-		}
-		for i := 0; i < searchData.Hits.HitsCount.Total; i++ {
-			fmt.Print(searchData.Hits.HitsMap[i].Index, "\t", "{")
-			for k, v := range searchData.Hits.HitsMap[i].Source {
-				fmt.Print("\"", k, "\": ", v, ", ")
+			if searchData.Hits.HitsCount.Total == 0 {
+				fmt.Println("No results found")
+				os.Exit(1)
+			} else {
+				fmt.Println("index", "\t", "document")
 			}
-			fmt.Print("}\n")
+			for i := 0; i < searchData.Hits.HitsCount.Total; i++ {
+				fmt.Print(searchData.Hits.HitsMap[i].Index, "\t", "{")
+				for k, v := range searchData.Hits.HitsMap[i].Source {
+					fmt.Print("\"", k, "\": ", v, ", ")
+				}
+				fmt.Print("}\n")
+			}
 		}
 	},
 }

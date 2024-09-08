@@ -11,6 +11,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/harvey-earth/elilogs/utils"
 )
@@ -69,16 +70,20 @@ EXIT STATUS
 			os.Exit(2)
 		}
 
-		fmt.Printf("%-15s %-10s %-10s\n", "index", "status", "health")
-		if len(resp) == 0 {
-			fmt.Println("No matching indexes found")
-			os.Exit(1)
-		}
-		for i := 0; i < len(indexData); i++ {
-			if indexData[i]["health"] != "green" {
-				exitCode = 1
+		// Print report if not quiet
+		if q := viper.GetBool("quiet"); q {
+		} else {
+			fmt.Printf("%-15s %-10s %-10s\n", "index", "status", "health")
+			if len(resp) == 0 {
+				fmt.Println("No matching indexes found")
+				os.Exit(1)
 			}
-			fmt.Printf("%-15.15s %-10.10s %-10.10s\n", indexData[i]["index"], indexData[i]["status"], indexData[i]["health"])
+			for i := 0; i < len(indexData); i++ {
+				if indexData[i]["health"] != "green" {
+					exitCode = 1
+				}
+				fmt.Printf("%-15.15s %-10.10s %-10.10s\n", indexData[i]["index"], indexData[i]["status"], indexData[i]["health"])
+			}
 		}
 		if exitCode != 0 {
 			os.Exit(exitCode)
