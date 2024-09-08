@@ -11,6 +11,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/harvey-earth/elilogs/utils"
 )
@@ -19,7 +20,7 @@ import (
 var searchCmd = &cobra.Command{
 	Use:   "search [-i|--index] <index> query",
 	Short: "Search within indices for matching docs",
-	Long: `This command searches an optional index, (or all indices if left blank) with a given query string. It returns the index and document (with document fields in no particular order) that match the query string.
+	Long: `This command searches an optional index, (or all indices if left blank) with a given query string. The query string should use Lucene query string syntax. It returns the index(es) and document(s) (with document fields in no particular order) that match the query string.
 
 EXIT STATUS
 0 if search is successful and returns results
@@ -32,6 +33,8 @@ elilogs search -i ["index"] 'query'`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Store query as var
 		query := args[0]
+
+		exitCode := 0
 
 		// Get flags
 		indexF, _ := cmd.Flags().GetString("index")
@@ -77,17 +80,27 @@ elilogs search -i ["index"] 'query'`,
 		}
 
 		if searchData.Hits.HitsCount.Total == 0 {
-			fmt.Println("No results found")
-			os.Exit(1)
-		} else {
-			fmt.Println("index", "\t", "document")
+			exitCode = 1
 		}
-		for i := 0; i < searchData.Hits.HitsCount.Total; i++ {
-			fmt.Print(searchData.Hits.HitsMap[i].Index, "\t", "{")
-			for k, v := range searchData.Hits.HitsMap[i].Source {
-				fmt.Print("\"", k, "\": ", v, ", ")
+
+		// Print results unless quiet
+		if q := viper.GetBool("quiet"); !q {
+			if exitCode == 1 {
+				fmt.Println("No results found")
+			} else {
+				fmt.Println("index", "\t", "document")
+
+				for i := 0; i < searchData.Hits.HitsCount.Total; i++ {
+					fmt.Print(searchData.Hits.HitsMap[i].Index, "\t", "{")
+					for k, v := range searchData.Hits.HitsMap[i].Source {
+						fmt.Print("\"", k, "\": ", v, ", ")
+					}
+					fmt.Print("}\n")
+				}
 			}
-			fmt.Print("}\n")
+		}
+		if exitCode != 0 {
+			os.Exit(1)
 		}
 	},
 }

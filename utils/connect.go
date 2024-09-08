@@ -2,6 +2,7 @@ package utils
 
 import (
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/elastic/go-elasticsearch/v8"
@@ -19,6 +20,11 @@ func Connect() (*elasticsearch.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer r.Body.Close()
+
+	resp, _ := io.ReadAll(r.Body)
+	LogRequest(resp)
+
 	if r.StatusCode == http.StatusOK {
 		// Good status, return es client
 		return es, nil

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/harvey-earth/elilogs/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,7 +19,7 @@ var rootCmd = &cobra.Command{
 	Short: "interact with elasticsearch",
 	Long:  `elilogs is a CLI application that allows easy interaction with elasticsearch. This app can easily list cluster and index information and can even run multi-index queries easily.`,
 
-	Version: "0.0.1",
+	Version: "0.0.2",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -31,14 +32,19 @@ func Execute() {
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "debug output")
+	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
-	rootCmd.MarkFlagsMutuallyExclusive("debug", "verbose")
+	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "no output")
+	viper.BindPFlag("quiet", rootCmd.PersistentFlags().Lookup("quiet"))
+	rootCmd.MarkFlagsMutuallyExclusive("debug", "quiet", "verbose")
 
 }
 
 // Configure reads in configuration file and environment variables
-func Configure() {
+func initConfig() {
 	viper.SetDefault("logLevel", "warn")
 
 	viper.SetEnvPrefix("ELILOGS")
@@ -51,10 +57,10 @@ func Configure() {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			fmt.Println("Configuration file not found")
-			os.Exit(1)
+			os.Exit(2)
 		} else {
 			fmt.Println("Fatal error in configuration: ", err)
-			os.Exit(1)
+			os.Exit(2)
 		}
 	}
 	SetLogLevel()
@@ -66,10 +72,14 @@ func SetLogLevel() {
 	if lvl != "" {
 		viper.Set("logLevel", lvl)
 	}
-	if c, _ := rootCmd.Flags().GetBool("verbose"); c {
+	if c := viper.GetBool("verbose"); c {
 		viper.Set("logLevel", "info")
 	}
-	if c, _ := rootCmd.Flags().GetBool("debug"); c {
+	if c := viper.GetBool("debug"); c {
 		viper.Set("logLevel", "debug")
 	}
+	if c := viper.GetBool("quiet"); c {
+		viper.Set("logLevel", "quiet")
+	}
+	utils.InitLogger()
 }
