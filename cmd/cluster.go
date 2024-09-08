@@ -155,8 +155,7 @@ EXIT STATUS
 		}
 
 		// Print data
-		if l := viper.GetBool("quiet"); l {
-		} else {
+		if q := viper.GetBool("quiet"); !q {
 			if allF || healthF {
 				// Print health report
 				fmt.Println("HEALTH")

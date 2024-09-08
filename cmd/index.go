@@ -71,12 +71,11 @@ EXIT STATUS
 		}
 
 		// Print report if not quiet
-		if q := viper.GetBool("quiet"); q {
-		} else {
+		if q := viper.GetBool("quiet"); !q {
 			fmt.Printf("%-15s %-10s %-10s\n", "index", "status", "health")
 			if len(resp) == 0 {
 				fmt.Println("No matching indexes found")
-				os.Exit(1)
+				exitCode = 1
 			}
 			for i := 0; i < len(indexData); i++ {
 				if indexData[i]["health"] != "green" {

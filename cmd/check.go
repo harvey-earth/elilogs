@@ -18,7 +18,11 @@ import (
 var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Tests connection to Elasticsearch",
-	Long:  `This command tests the connection to Elasticsearch. This is only useful for initial configuration. You do not need to call this before other commands, as they each perform their own connection test.`,
+	Long:  `This command tests the connection to Elasticsearch. This is only useful for initial configuration. You do not need to call this before other commands, as they each perform their own connection test.
+	
+EXIT STATUS
+0 if check is sucessful
+2 if check is not successful`,
 	Run: func(cmd *cobra.Command, args []string) {
 		utils.Info("check called")
 

@@ -37,7 +37,7 @@ func init() {
 	viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug"))
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "verbose output")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
-	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "quiet output")
+	rootCmd.PersistentFlags().BoolP("quiet", "q", false, "no output")
 	viper.BindPFlag("quiet", rootCmd.PersistentFlags().Lookup("quiet"))
 	rootCmd.MarkFlagsMutuallyExclusive("debug", "quiet", "verbose")
 
@@ -57,10 +57,10 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			fmt.Println("Configuration file not found")
-			os.Exit(1)
+			os.Exit(2)
 		} else {
 			fmt.Println("Fatal error in configuration: ", err)
-			os.Exit(1)
+			os.Exit(2)
 		}
 	}
 	SetLogLevel()
