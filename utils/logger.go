@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -10,7 +11,17 @@ var Elilogger *zap.SugaredLogger
 
 // InitLogger initializes the zap logger for use
 func InitLogger() {
-	verbosity := zap.DebugLevel
+	var verbosity zapcore.Level
+	switch lvl := viper.GetString("logLevel"); lvl {
+	case "warn":
+		verbosity = zap.WarnLevel
+	case "info":
+		verbosity = zap.InfoLevel
+	case "debug":
+		verbosity = zap.DebugLevel
+	case "quiet":
+		verbosity = zap.FatalLevel
+	}
 
 	cfg := zap.NewProductionEncoderConfig()
 	cfg.TimeKey = "timestamp"
