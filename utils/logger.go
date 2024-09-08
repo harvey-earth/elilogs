@@ -101,4 +101,3 @@ func Info(infoString string) {
 func Warn(warnString string) {
 	Elilogger.Warn(warnString)
 }
-
