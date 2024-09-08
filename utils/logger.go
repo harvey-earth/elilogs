@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"unicode"
 
@@ -77,6 +78,7 @@ func Error(errString string, err error) error {
 	errString = cleanup(errString, err)
 	if err != nil {
 		Elilogger.Error(errString)
+		os.Exit(1)
 	}
 	return nil
 }
@@ -99,4 +101,3 @@ func Info(infoString string) {
 func Warn(warnString string) {
 	Elilogger.Warn(warnString)
 }
-

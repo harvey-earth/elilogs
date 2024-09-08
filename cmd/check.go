@@ -21,8 +21,8 @@ var checkCmd = &cobra.Command{
 	Long: `This command tests the connection to Elasticsearch. This is only useful for initial configuration. You do not need to call this before other commands, as they each perform their own connection test.
 	
 EXIT STATUS
-0 if check is sucessful
-2 if check is not successful`,
+0 if check is sucessful,
+1 if check is not successful.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		utils.Info("check called")
 
@@ -30,7 +30,6 @@ EXIT STATUS
 		conn, err := utils.Connect()
 		if err != nil {
 			utils.Error("error connecting", err)
-			os.Exit(2)
 		}
 		utils.Info("check successful")
 
@@ -41,12 +40,10 @@ EXIT STATUS
 			indexResp, err := esapi.CatIndicesRequest{Format: "json"}.Do(context.Background(), conn)
 			if err != nil {
 				utils.Error("error requesting indexes:", err)
-				os.Exit(2)
 			}
 			if indexResp.StatusCode != http.StatusOK {
 				r, _ := io.ReadAll(indexResp.Body)
 				utils.Error("error requesting indexes:", errors.New(string(r)))
-				os.Exit(2)
 			}
 
 			resp, _ := io.ReadAll(indexResp.Body)
@@ -54,7 +51,6 @@ EXIT STATUS
 			indexData, err := utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
-				os.Exit(2)
 			}
 
 			// Get user home directory and write to .cache/elilogs.txt

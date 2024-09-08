@@ -23,9 +23,9 @@ var searchCmd = &cobra.Command{
 	Long: `This command searches an optional index, (or all indices if left blank) with a given query string. The query string should use Lucene query string syntax. It returns the index(es) and document(s) (with document fields in no particular order) that match the query string.
 
 EXIT STATUS
-0 if search is successful and returns results
-1 if search is successful but returned no results
-2 if there was an error with the request/response`,
+0 if search is successful and returns results,
+1 if there was an error with the request/response,
+2 if search is successful but returned no results.`,
 
 	Example: `elilogs search 'query'
 elilogs search -i ["index"] 'query'`,
@@ -47,7 +47,6 @@ elilogs search -i ["index"] 'query'`,
 		conn, err := utils.Connect()
 		if err != nil {
 			utils.Error("error connecting", err)
-			os.Exit(2)
 		}
 		utils.Info("check successful")
 
@@ -63,11 +62,9 @@ elilogs search -i ["index"] 'query'`,
 		if searchResp.StatusCode != http.StatusOK {
 			r, _ := io.ReadAll(searchResp.Body)
 			utils.Error("error searching:", errors.New(string(r)))
-			os.Exit(2)
 		}
 		if err != nil {
 			utils.Error("error searching:", err)
-			os.Exit(2)
 		}
 		defer searchResp.Body.Close()
 
@@ -76,16 +73,15 @@ elilogs search -i ["index"] 'query'`,
 		searchData, err := utils.HandleSearchResponse(resp)
 		if err != nil {
 			utils.Error("error handling response:", err)
-			os.Exit(2)
 		}
 
 		if searchData.Hits.HitsCount.Total == 0 {
-			exitCode = 1
+			exitCode = 2
 		}
 
 		// Print results unless quiet
 		if q := viper.GetBool("quiet"); !q {
-			if exitCode == 1 {
+			if exitCode == 2 {
 				fmt.Println("No results found")
 			} else {
 				fmt.Println("index", "\t", "document")
@@ -100,7 +96,7 @@ elilogs search -i ["index"] 'query'`,
 			}
 		}
 		if exitCode != 0 {
-			os.Exit(1)
+			os.Exit(exitCode)
 		}
 	},
 }

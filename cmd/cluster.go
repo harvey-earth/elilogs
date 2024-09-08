@@ -23,12 +23,12 @@ var clusterCmd = &cobra.Command{
 
 EXIT STATUS
 0 if successful (and cluster health is green if health flag selected),
-1 if the cluster health is not green and health flag selected,
-2 if there was an error with the request/response.`,
+1 if there was an error with the request/response,
+2 if the cluster health is not green and health flag selected.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		exitCode := 0
 		utils.Info("cluster called")
 
+		exitCode := 0
 		// Get flag settings; if all are false then make "all" true
 		allF, _ := cmd.Flags().GetBool("all")
 		healthF, _ := cmd.Flags().GetBool("health")
@@ -49,7 +49,6 @@ EXIT STATUS
 		conn, err := utils.Connect()
 		if err != nil {
 			utils.Error("error connecting", err)
-			os.Exit(2)
 		}
 		utils.Info("check successful")
 
@@ -60,11 +59,9 @@ EXIT STATUS
 			if healthResp.StatusCode != http.StatusOK {
 				r, _ := io.ReadAll(healthResp.Body)
 				utils.Error("error getting health:", errors.New(string(r)))
-				os.Exit(2)
 			}
 			if err != nil {
 				utils.Error("error getting health:", err)
-				os.Exit(2)
 			}
 			defer healthResp.Body.Close()
 
@@ -75,7 +72,6 @@ EXIT STATUS
 			healthData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
-				os.Exit(2)
 			}
 		}
 
@@ -88,7 +84,6 @@ EXIT STATUS
 			}
 			if err != nil {
 				utils.Error("error getting nodes:", err)
-				os.Exit(2)
 			}
 			defer nodeResp.Body.Close()
 
@@ -98,7 +93,6 @@ EXIT STATUS
 			nodeData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response", err)
-				os.Exit(2)
 			}
 		}
 
@@ -108,11 +102,9 @@ EXIT STATUS
 			if pendingResp.StatusCode != http.StatusOK {
 				r, _ := io.ReadAll(pendingResp.Body)
 				utils.Error("error getting pending tasks:", errors.New(string(r)))
-				os.Exit(2)
 			}
 			if err != nil {
 				utils.Error("error getting pending tasks:", err)
-				os.Exit(2)
 			}
 			defer pendingResp.Body.Close()
 
@@ -122,7 +114,6 @@ EXIT STATUS
 			pendingData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
-				os.Exit(2)
 			}
 		}
 
@@ -132,11 +123,9 @@ EXIT STATUS
 			if snapResp.StatusCode != http.StatusOK {
 				r, _ := io.ReadAll(snapResp.Body)
 				utils.Error("error getting snapshots:", errors.New(string(r)))
-				os.Exit(2)
 			}
 			if err != nil {
 				utils.Error("error getting snapshots:", err)
-				os.Exit(2)
 			}
 			defer snapResp.Body.Close()
 
@@ -146,12 +135,8 @@ EXIT STATUS
 			snapData, err = utils.HandleResponse(resp)
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
-				os.Exit(2)
 			}
 
-		}
-		if exitCode != 0 {
-			os.Exit(exitCode)
 		}
 
 		// Print data
@@ -162,7 +147,7 @@ EXIT STATUS
 				fmt.Printf("%-20s %-10s\n", "cluster name", "status")
 				for i := 0; i < len(healthData); i++ {
 					if healthData[i]["status"] != "green" {
-						exitCode = 1
+						exitCode = 2
 					}
 					fmt.Printf("%-20.20s %-10s\n", healthData[i]["cluster"], healthData[i]["status"])
 				}
@@ -212,6 +197,9 @@ EXIT STATUS
 				}
 			}
 
+		}
+		if exitCode != 0 {
+			os.Exit(exitCode)
 		}
 	},
 }
