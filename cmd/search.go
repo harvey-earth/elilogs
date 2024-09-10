@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -54,19 +53,7 @@ elilogs search -i ["index"] 'query'`,
 
 		// Print results unless quiet
 		if q := viper.GetBool("quiet"); !q {
-			if exitCode == 2 {
-				fmt.Println("No results found")
-			} else {
-				fmt.Println("index", "\t", "document")
-
-				for i := 0; i < searchData.Hits.HitsCount.Total; i++ {
-					fmt.Print(searchData.Hits.HitsMap[i].Index, "\t", "{")
-					for k, v := range searchData.Hits.HitsMap[i].Source {
-						fmt.Print("\"", k, "\": ", v, ", ")
-					}
-					fmt.Print("}\n")
-				}
-			}
+			internal.PrintSearchResults(searchData)
 		}
 		if exitCode != 0 {
 			os.Exit(exitCode)
