@@ -13,6 +13,7 @@ import (
 	"github.com/harvey-earth/elilogs/utils"
 )
 
+// ListIndex takes a connection and slice of strings and runs a CatIndicesRequest to return data, an exit code to bubble up, and an error
 func ListIndex(conn *elasticsearch.Client, indexes []string) (indexData []map[string]string, exitCode int, err error) {
 	var indexResp *esapi.Response
 	exitCode = 0

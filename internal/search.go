@@ -14,6 +14,7 @@ import (
 	"github.com/harvey-earth/elilogs/utils"
 )
 
+// Search takes a connection, slice of strings for indices, and a query string and returns data, an exit code to bubble up, and an error
 func Search(conn *elasticsearch.Client, indexes []string, query string) (searchData models.SearchResponse, exitCode int, err error) {
 	var searchResp *esapi.Response
 	exitCode = 0

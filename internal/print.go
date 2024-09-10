@@ -23,6 +23,7 @@ func PrintSearchResults(searchData models.SearchResponse) {
 	}
 }
 
+// PrintListIndexResults prints results returned by the ListIndex function
 func PrintListIndexResults(indexData []map[string]string) {
 	fmt.Printf("%-15s %-10s %-10s\n", "index", "status", "health")
 	if len(indexData) == 0 {
