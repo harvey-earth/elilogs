@@ -1,18 +1,14 @@
 package cmd
 
 import (
-	"context"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strings"
 
-	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/harvey-earth/elilogs/internal"
 	"github.com/harvey-earth/elilogs/utils"
 )
 
@@ -41,42 +37,18 @@ EXIT STATUS
 		}
 		utils.Info("check successful")
 
-		// Hold response as variable
-		var indexResp *esapi.Response
-
-		// If there are strings searching for a specific index use that
-		if len(indexStrings) > 0 {
-			indexResp, err = esapi.CatIndicesRequest{Index: indexStrings, Format: "json"}.Do(context.Background(), conn)
-		} else {
-			indexResp, err = esapi.CatIndicesRequest{Format: "json"}.Do(context.Background(), conn)
-		}
-		if indexResp.StatusCode != http.StatusOK {
-			r, _ := io.ReadAll(indexResp.Body)
-			utils.Error("error getting indexes:", errors.New(string(r)))
-		}
+		indexData, exitCode, err := internal.ListIndex(conn, indexStrings)
 		if err != nil {
-			utils.Error("error getting indexes:", err)
-		}
-		defer indexResp.Body.Close()
-
-		resp, _ := io.ReadAll(indexResp.Body)
-		utils.LogRequest(resp)
-		indexData, err := utils.HandleResponse(resp)
-		if err != nil && len(resp) != 0 {
-			utils.Error("error unmarshalling response:", err)
+			utils.Error("error listing index: %w", err)
 		}
 
 		// Print report if not quiet
 		if q := viper.GetBool("quiet"); !q {
 			fmt.Printf("%-15s %-10s %-10s\n", "index", "status", "health")
-			if len(resp) == 0 {
+			if len(indexData) == 0 {
 				fmt.Println("No matching indexes found")
-				exitCode = 2
 			}
 			for i := 0; i < len(indexData); i++ {
-				if indexData[i]["health"] != "green" {
-					exitCode = 2
-				}
 				fmt.Printf("%-15.15s %-10.10s %-10.10s\n", indexData[i]["index"], indexData[i]["status"], indexData[i]["health"])
 			}
 		}
