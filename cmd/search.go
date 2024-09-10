@@ -29,8 +29,6 @@ elilogs search -i ["index"] 'query'`,
 		// Store query as var
 		query := args[0]
 
-		exitCode := 0
-
 		// Get flags
 		indexF, _ := cmd.Flags().GetString("index")
 		indexStrings := strings.Split(indexF, ",")
@@ -45,11 +43,7 @@ elilogs search -i ["index"] 'query'`,
 		}
 		utils.Info("check successful")
 
-		searchData, err := internal.Search(conn, indexStrings, query)
-
-		if searchData.Hits.HitsCount.Total == 0 {
-			exitCode = 2
-		}
+		searchData, exitCode, err := internal.Search(conn, indexStrings, query)
 
 		// Print results unless quiet
 		if q := viper.GetBool("quiet"); !q {

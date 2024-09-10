@@ -22,3 +22,13 @@ func PrintSearchResults(searchData models.SearchResponse) {
 		}
 	}
 }
+
+func PrintListIndexResults(indexData []map[string]string) {
+	fmt.Printf("%-15s %-10s %-10s\n", "index", "status", "health")
+	if len(indexData) == 0 {
+		fmt.Println("No matching indexes found")
+	}
+	for i := 0; i < len(indexData); i++ {
+		fmt.Printf("%-15.15s %-10.10s %-10.10s\n", indexData[i]["index"], indexData[i]["status"], indexData[i]["health"])
+	}
+}

@@ -23,16 +23,17 @@ func ListIndex(conn *elasticsearch.Client, indexes []string) (indexData []map[st
 	} else {
 		indexResp, err = esapi.CatIndicesRequest{Format: "json"}.Do(context.Background(), conn)
 	}
+	if indexResp.StatusCode == http.StatusNotFound {
+		return make([]map[string]string, 0), 2, nil
+	}
 	if indexResp.StatusCode != http.StatusOK {
 		r, _ := io.ReadAll(indexResp.Body)
 		err = fmt.Errorf("error getting indexes: %w", errors.New(string(r)))
-		exitCode = 1
-		return
+		return nil, 1, err
 	}
 	if err != nil {
 		err = fmt.Errorf("error getting indexes: %w", err)
-		exitCode = 1
-		return
+		return nil, 1, err
 	}
 	defer indexResp.Body.Close()
 
@@ -41,7 +42,7 @@ func ListIndex(conn *elasticsearch.Client, indexes []string) (indexData []map[st
 	indexData, err = utils.HandleResponse(resp)
 	if err != nil && len(resp) != 0 {
 		err = fmt.Errorf("error unmarshalling response: %w", err)
-		return nil, 2, err
+		return nil, 1, err
 	}
 
 	if len(indexData) == 0 {

@@ -14,8 +14,9 @@ import (
 	"github.com/harvey-earth/elilogs/utils"
 )
 
-func Search(conn *elasticsearch.Client, indexes []string, query string) (searchData models.SearchResponse, err error) {
+func Search(conn *elasticsearch.Client, indexes []string, query string) (searchData models.SearchResponse, exitCode int, err error) {
 	var searchResp *esapi.Response
+	exitCode = 0
 
 	if len(indexes) > 0 {
 		searchResp, err = esapi.SearchRequest{Index: indexes, Query: string(query)}.Do(context.Background(), conn)
@@ -26,11 +27,11 @@ func Search(conn *elasticsearch.Client, indexes []string, query string) (searchD
 		r, _ := io.ReadAll(searchResp.Body)
 		utils.Error("error searching:", errors.New(string(r)))
 		err = fmt.Errorf("error searching: %w", errors.New(string(r)))
-		return
+		return searchData, 1, err
 	}
 	if err != nil {
 		err = fmt.Errorf("error searching: %w", err)
-		return
+		return searchData, 1, err
 	}
 	defer searchResp.Body.Close()
 
@@ -39,8 +40,11 @@ func Search(conn *elasticsearch.Client, indexes []string, query string) (searchD
 	searchData, err = utils.HandleSearchResponse(resp)
 	if err != nil {
 		err = fmt.Errorf("error handling response: %w", err)
-		return
+		return searchData, 1, err
+	}
+	if searchData.Hits.HitsCount.Total == 0 {
+		exitCode = 2
 	}
 
-	return searchData, nil
+	return searchData, exitCode, nil
 }

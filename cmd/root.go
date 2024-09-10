@@ -58,10 +58,10 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			fmt.Println("Configuration file not found")
-			os.Exit(2)
+			os.Exit(1)
 		} else {
 			fmt.Println("Fatal error in configuration: ", err)
-			os.Exit(2)
+			os.Exit(1)
 		}
 	}
 	SetLogLevel()
