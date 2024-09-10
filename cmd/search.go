@@ -1,18 +1,14 @@
 package cmd
 
 import (
-	"context"
-	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strings"
 
-	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/harvey-earth/elilogs/internal"
 	"github.com/harvey-earth/elilogs/utils"
 )
 
@@ -41,7 +37,7 @@ elilogs search -i ["index"] 'query'`,
 		indexStrings := strings.Split(indexF, ",")
 
 		utils.Info("search called")
-		utils.Info("query: " + query)
+		utils.Debug("query: " + query)
 
 		// Connect to cluster
 		conn, err := utils.Connect()
@@ -50,30 +46,7 @@ elilogs search -i ["index"] 'query'`,
 		}
 		utils.Info("check successful")
 
-		// Hold response as variable
-		var searchResp *esapi.Response
-
-		// Run query with esapi while checking for specific indexes
-		if len(indexStrings) > 0 {
-			searchResp, err = esapi.SearchRequest{Index: indexStrings, Query: string(query)}.Do(context.Background(), conn)
-		} else {
-			searchResp, err = esapi.SearchRequest{Query: "test"}.Do(context.Background(), conn)
-		}
-		if searchResp.StatusCode != http.StatusOK {
-			r, _ := io.ReadAll(searchResp.Body)
-			utils.Error("error searching:", errors.New(string(r)))
-		}
-		if err != nil {
-			utils.Error("error searching:", err)
-		}
-		defer searchResp.Body.Close()
-
-		resp, _ := io.ReadAll(searchResp.Body)
-		utils.LogRequest(resp)
-		searchData, err := utils.HandleSearchResponse(resp)
-		if err != nil {
-			utils.Error("error handling response:", err)
-		}
+		searchData, err := internal.Search(conn, indexStrings, query)
 
 		if searchData.Hits.HitsCount.Total == 0 {
 			exitCode = 2
