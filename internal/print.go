@@ -33,3 +33,40 @@ func PrintListIndexResults(indexData []map[string]string) {
 		fmt.Printf("%-15.15s %-10.10s %-10.10s\n", indexData[i]["index"], indexData[i]["status"], indexData[i]["health"])
 	}
 }
+
+func PrintHealthInformation(healthData []map[string]string) {
+	fmt.Println("HEALTH")
+	fmt.Printf("%-20s %-10s\n", "cluster name", "status")
+	for i := 0; i < len(healthData); i++ {
+		fmt.Printf("%-20.20s %-10s\n", healthData[i]["cluster"], healthData[i]["status"])
+	}
+}
+
+func PrintNodeInformation(nodeData []map[string]string) {
+	fmt.Println("NODES")
+	fmt.Printf("%-20.20s %-10.10s\n", "node name", "ip")
+	for i := 0; i < len(nodeData); i++ {
+		fmt.Printf("%-20.20s %-10.10s", nodeData[i]["name"], nodeData[i]["ip"])
+		if nodeData[i]["master"] == "*" {
+			fmt.Println(" - MASTER")
+		} else {
+			fmt.Println("")
+		}
+	}
+}
+
+func PrintPendingTasks(pendingData []map[string]string) {
+	fmt.Println("PENDING TASKS")
+	fmt.Printf("%-20.20s %-10.10s\n", "source", "priority")
+	for i := 0; i < len(pendingData); i++ {
+		fmt.Printf("%-20.20s %-10.10s\n", pendingData[i]["source"], pendingData[i]["priority"])
+	}
+}
+
+func PrintSnapshots(snapData []map[string]string) {
+	fmt.Println("SNAPSHOTS")
+	fmt.Printf("%-20.20s %-10.10s\n", "id", "status")
+	for i := 0; i < len(snapData); i++ {
+		fmt.Printf("%-20.20s %-10.10s\n", snapData[i]["id"], snapData[i]["status"])
+	}
+}

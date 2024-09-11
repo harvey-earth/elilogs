@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/harvey-earth/elilogs/internal"
 	"github.com/harvey-earth/elilogs/utils"
 )
 
@@ -73,6 +74,13 @@ EXIT STATUS
 			if err != nil {
 				utils.Error("error unmarshalling response:", err)
 			}
+
+			/// Check cluster status
+			for i := 0; i < len(healthData); i++ {
+				if healthData[i]["status"] != "green" {
+					exitCode = 2
+				}
+			}
 		}
 
 		// Get information about nodes if all or nodes
@@ -117,7 +125,7 @@ EXIT STATUS
 			}
 		}
 
-		// Get information about snapshots if all or pending
+		// Get information about snapshots if all or snapshot 
 		if allF || snapshotF {
 			snapResp, err := esapi.CatSnapshotsRequest{Format: "json"}.Do(context.Background(), conn)
 			if snapResp.StatusCode != http.StatusOK {
@@ -143,60 +151,32 @@ EXIT STATUS
 		if q := viper.GetBool("quiet"); !q {
 			if allF || healthF {
 				// Print health report
-				fmt.Println("HEALTH")
-				fmt.Printf("%-20s %-10s\n", "cluster name", "status")
-				for i := 0; i < len(healthData); i++ {
-					if healthData[i]["status"] != "green" {
-						exitCode = 2
-					}
-					fmt.Printf("%-20.20s %-10s\n", healthData[i]["cluster"], healthData[i]["status"])
-				}
+				internal.PrintHealthInformation(healthData)
 
 				if allF || nodesF || pendingF || snapshotF {
 					fmt.Println("")
 				}
 			}
-
 			if allF || nodesF {
 				// Print node report
-				fmt.Println("NODES")
-				fmt.Printf("%-20.20s %-10.10s\n", "node name", "ip")
-				for i := 0; i < len(nodeData); i++ {
-					fmt.Printf("%-20.20s %-10.10s", nodeData[i]["name"], nodeData[i]["ip"])
-					if nodeData[i]["master"] == "*" {
-						fmt.Println(" - MASTER")
-					} else {
-						fmt.Println("")
-					}
-				}
+				internal.PrintNodeInformation(nodeData)
 
 				if allF || pendingF || snapshotF {
 					fmt.Println("")
 				}
 			}
-
 			if allF || pendingF {
 				// Print pending tasks report
-				fmt.Println("PENDING TASKS")
-				fmt.Printf("%-20.20s %-10.10s\n", "source", "priority")
-				for i := 0; i < len(pendingData); i++ {
-					fmt.Printf("%-20.20s %-10.10s\n", pendingData[i]["source"], pendingData[i]["priority"])
-				}
+				internal.PrintPendingTasks(pendingData)
 
 				if allF || snapshotF {
 					fmt.Println("")
 				}
 			}
-
 			if allF || snapshotF {
 				// Print snapshot report
-				fmt.Println("SNAPSHOTS")
-				fmt.Printf("%-20.20s %-10.10s\n", "id", "status")
-				for i := 0; i < len(snapData); i++ {
-					fmt.Printf("%-20.20s %-10.10s\n", snapData[i]["id"], snapData[i]["status"])
-				}
+				internal.PrintSnapshots(snapData)
 			}
-
 		}
 		if exitCode != 0 {
 			os.Exit(exitCode)
