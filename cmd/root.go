@@ -19,7 +19,7 @@ var rootCmd = &cobra.Command{
 	Short: "interact with elasticsearch",
 	Long:  `elilogs is a CLI application that allows easy interaction with elasticsearch. This app can easily list cluster and index information and can even run multi-index queries easily.`,
 
-	Version: "0.0.3",
+	Version: "0.0.4",
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
